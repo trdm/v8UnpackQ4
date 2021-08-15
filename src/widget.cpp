@@ -12,14 +12,38 @@ Widget::Widget(QWidget *parent)
 , ui(new Ui::Widget)
 {
 	ui->setupUi(this);
-	m_list = qApp->arguments();
-	if (m_list.count() > 1) {
-		ui->fileName_le->setText(m_list.at(1));
-	}	
-	updateFolderCB();
+	m_listArgs = qApp->arguments();
+	ui->directoryComboBox->blockSignals(true);
 	settingsLoad();
+	ui->directoryComboBox->blockSignals(false);
+	if (m_listArgs.count() > 1) {
+		setSelectedFileName(m_listArgs.at(1)); //		ui->fileName_le->setText(m_list.at(1));
+		updateFolderCB();
+	}
 	showStatus("Run...");
+	m_serviseMenu = new QMenu(this);
+	ui->servise_pb->setMenu(m_serviseMenu);
 
+	m_actFoundGU = new QAction(QString::fromUtf8("Найти v8unpack и gcomp"),this);
+	m_serviseMenu->addAction(m_actFoundGU);
+	connect(m_actFoundGU,SIGNAL(triggered()),this,SLOT(on_find_v8unpack()));
+	m_serviseMenu->addSeparator();
+
+	m_actKillFileItem = new QAction(QString::fromUtf8("Удалить из списка текущий файл"),this);	m_serviseMenu->addAction(m_actKillFileItem);
+	connect(m_actKillFileItem,SIGNAL(triggered()),this,SLOT(on_kill_item_file_tb_clicked()));
+
+	m_actKillFolderItem = new QAction(QString::fromUtf8("Удалить из списка ТЕКУЩУЮ ДИРЕКТОРИЮ"),this);	m_serviseMenu->addAction(m_actKillFolderItem);
+	connect(m_actKillFolderItem,SIGNAL(triggered()),this,SLOT(on_kill_item_folder_tb_clicked()));
+	m_serviseMenu->addSeparator();
+
+	m_actCliarSettings = new QAction(QString::fromUtf8("Очистить настройки"),this);
+	m_serviseMenu->addAction(m_actCliarSettings);
+	connect(m_actCliarSettings,SIGNAL(triggered()),this,SLOT(on_resetSettings_tb_clicked()));
+
+//	m_serviseMenu->addSeparator();
+	m_actWhereIAm = new QAction(QString::fromUtf8("КаковЪ путь?"),this);
+	m_serviseMenu->addAction(m_actWhereIAm);
+	connect(m_actWhereIAm,SIGNAL(triggered()),this,SLOT(on_show_path_to_me()));
 }
 
 Widget::~Widget()
@@ -31,55 +55,70 @@ void Widget::settingsLoad()
 	QSettings set(gMyName,gProgName);
 	ui->forVCS_cb->setChecked(set.value("v8UnpackQ4/forVCS").toBool());
 	ui->for1Cv77->setChecked(set.value("v8UnpackQ4/for1Cv77").toBool());
-	QStringList vals = set.value("v8UnpackQ4/list_dirs").toStringList();
-	QStringList total_folders = set.value("v8UnpackQ4/total_folders").toStringList();
+
+	m_list_dirs = set.value("v8UnpackQ4/dirs_list_map").toStringList();
+	QStringList total_folders = set.value("v8UnpackQ4/folders_save").toStringList();
 	QStringList vals_sub;
-	m_foldersMap.clear();
+	QString val;
+	QString vFolderPs = getFolderFromFile(selectedFileName()/*ui->fileName_le->text()*/);
+
 	QString vDir = ui->directoryComboBox->currentText();
 	ui->directoryComboBox->clear();
-	QString val;
-	QString vFolderPs = getFolderFromFile(ui->fileName_le->text());
-	//m_foldersSet.insert()
-	if (!vals.isEmpty()) {
-		foreach (val, vals) {
-			vals_sub = val.split('\t');
-			if (vals_sub.count() == 2) {
-				try {
-					m_foldersMap.insert(vals_sub.at(0),vals_sub.at(1));
-				} catch (...) {
-				}
-				if (vals_sub.at(0) == vFolderPs) {
-					ui->directoryComboBox->insertItem(0,vals_sub.at(1));
-					break;
-				}
 
-			}
-			//ui->directoryComboBox->addItem(val);
+	if (!vDir.isEmpty()) {
+		if (ui->directoryComboBox->findText(vDir) == -1) {
+			ui->directoryComboBox->addItem(vDir);
 		}
 	}
-	ui->directoryComboBox->addItem(vDir);
 	foreach (val, total_folders) {
 		if (ui->directoryComboBox->findText(val) == -1) {
 			ui->directoryComboBox->addItem(val);
 		}
 	}
+	total_folders = set.value("v8UnpackQ4/list_files").toStringList();
+	ui->fileName_cb->blockSignals(true);
+	foreach (val, total_folders) {
+		if (!val.isEmpty()) {
+			if (ui->fileName_cb->findText(val) == -1) {
+				ui->fileName_cb->addItem(val);
+			}
+		}
+	}
+	ui->fileName_cb->insertItem(0,"");
+	ui->fileName_cb->setCurrentIndex(0);
+	ui->fileName_cb->blockSignals(false);
 }
 
 void Widget::settingsSave(){
 	QSettings set(gMyName,gProgName);
-	QStringList vals = set.value("v8UnpackQ4/list_dirs").toStringList();
-	QStringList total_folders = set.value("v8UnpackQ4/total_folders").toStringList();
-	QString vFolderPs = getFolderFromFile(ui->fileName_le->text());
+	QStringList dirs_map, dirs_map_old = set.value("v8UnpackQ4/dirs_list_map").toStringList();
+	QStringList total_folders = set.value("v8UnpackQ4/folders_save").toStringList();
+
+	QString vFolderPs, vFolderPs_c = getFolderFromFile(selectedFileName()/*ui->fileName_le->text()*/);
+	vFolderPs = vFolderPs_c;
 	QString vFileSep = getDelim(vFolderPs);
-	if (vFolderPs.at(vFolderPs.count()-1) != vFileSep.at(vFileSep.count()-1)) {
-		vFolderPs += vFileSep;
+	QString vDestFolder = ui->directoryComboBox->currentText();
+	QString val, vDestFolder_c = vDestFolder;
+	if (dirs_map_old.count() > 0) {
+		// Чистим от сарых пар..
+		vFolderPs_c += "	";
+		foreach (val, dirs_map_old) {
+			if (!val.contains(vFolderPs_c)) {
+				dirs_map.append(val);
+			}
+		}
 	}
-	vFolderPs += "	";
-	vFolderPs += ui->directoryComboBox->currentText();
-	if (vals.indexOf(vFolderPs) == -1) {
-		vals.append(vFolderPs);
+	if (vFolderPs.length() > 2) {
+		if (vFolderPs.at(vFolderPs.count()-1) != vFileSep.at(vFileSep.count()-1)) {
+			vFolderPs += vFileSep;
+		}
+		vFolderPs += "	";
+		vFolderPs += vDestFolder;
+		if (dirs_map.indexOf(vFolderPs) == -1) {
+			dirs_map.insert(0,vFolderPs);
+		}
 	}
-	QString val;
+	set.setValue("v8UnpackQ4/dirs_list_map",dirs_map);
 	for (int var = 0; var < ui->directoryComboBox->count(); ++var) {
 		val = ui->directoryComboBox->itemText(var);
 		if (val.isEmpty()) {
@@ -92,12 +131,27 @@ void Widget::settingsSave(){
 			break;
 		}
 	}
-	//total_folders = set.value("v8UnpackQ4/total_folders"
 
-	set.setValue("v8UnpackQ4/total_folders",total_folders);
-	set.setValue("v8UnpackQ4/list_dirs",vals);
+	set.setValue("v8UnpackQ4/folders_save",total_folders);
 	set.setValue("v8UnpackQ4/forVCS",ui->forVCS_cb->isChecked());
 	set.setValue("v8UnpackQ4/for1Cv77",ui->for1Cv77->isChecked());
+
+	QStringList vals;
+	for (int var = 0; var < ui->fileName_cb->count(); ++var) {
+		val = ui->fileName_cb->itemText(var);
+		if (val.isEmpty()) {
+			continue;
+		}
+		if (!vals.contains(val)) {
+			vals.push_back(val);
+		}
+		if (var >= 30) {
+			break;
+		}
+	}
+	set.setValue("v8UnpackQ4/list_files",vals);
+
+
 }
 
 
@@ -124,10 +178,12 @@ void Widget::on_toolButton_clicked()
 	updateFolderTarget();
 }
 
-//label_folder_target
-void Widget::updateFolderCB(){
-	QString vFile = ui->fileName_le->text();
-
+QStringList Widget::parseFileName(QString fName){
+	QStringList list;
+	QString vFile = fName;
+	m_fileNameBaseName = "";
+	m_fileNameExt = "";
+	m_fileNameFolder = "";
 	if (!vFile.isEmpty()) {
 		QString vSpl = getDelim(vFile);
 		QStringList li = vFile.split(vSpl);
@@ -136,19 +192,34 @@ void Widget::updateFolderCB(){
 			vFile += li.at(var);
 			vFile += vSpl;
 		}
-		m_fileNameWE = li.at(li.count()-1);
-		li = m_fileNameWE.split(".");
-		m_fileNameWE = "";
+		m_fileNameBaseName = li.at(li.count()-1);
+		li = m_fileNameBaseName.split(".");
+		m_fileNameBaseName = "";
 		for (int var = 0; var < li.count()-1; ++var) {
-			if (!m_fileNameWE.isEmpty()) {
-				m_fileNameWE += ".";
+			if (!m_fileNameBaseName.isEmpty()) {
+				m_fileNameBaseName += ".";
 			}
-			m_fileNameWE += li.at(var);
+			m_fileNameBaseName += li.at(var);
 		}
-		qDebug() << m_fileNameWE;
-		int ft = ui->directoryComboBox->findText(vFile);
+		m_fileNameFolder = vFile;
+		m_fileNameExt = li.back();
+
+	}
+
+	return list;
+}
+//label_folder_target
+void Widget::updateFolderCB(){
+	QString vFile = selectedFileName()/*ui->fileName_le->text()*/;
+	parseFileName(vFile);
+	if (!vFile.isEmpty() && !m_fileNameFolder.isEmpty()) {
+		QString vRf = getRelationFolder(m_fileNameFolder);
+		if (vRf.isEmpty()) {
+			vRf = m_fileNameFolder;
+		}
+		int ft = ui->directoryComboBox->findText(vRf);
 		if (ft == -1) {
-			ui->directoryComboBox->addItem(vFile);
+			ui->directoryComboBox->addItem(vRf);
 		} else {
 			ui->directoryComboBox->setCurrentIndex(ft);
 		}
@@ -170,13 +241,18 @@ void Widget::updateFolderTarget(){
 	if (vPath.at(vPath.count()-1) != vSpl.at(0)) {
 		vPath += vSpl;
 	}
-	vPath += m_fileNameWE;
+	vPath += m_fileNameBaseName;
 	m_folder_target = vPath;
 	ui->label_folder_target->setText(m_folder_target);
 }
 
 void Widget::showStatus(QString stat){
-	ui->label_status->setText(stat);
+	//ui->label_status->setText(stat);
+	QDateTime dt =  QDateTime::currentDateTime();
+	QString vStat = QString("%1 %2").arg(dt.toString("hh:mm:ss")).arg(stat);
+	ui->list_status->addItem(vStat);
+	QListWidgetItem* item = ui->list_status->item(ui->list_status->count()-1);
+	item->setFlags(item->flags() | Qt::ItemIsEditable);
 }
 
 
@@ -226,6 +302,31 @@ void Widget::clearFiles(QString dirertory) {
 
 }
 
+// меняем QLineEdit на QComboBox для сохранения истории.
+QString Widget::selectedFileName(){
+	return ui->fileName_cb->currentText();
+//	return ui->fileName_le->text();
+}
+
+void Widget::setSelectedFileName(QString f_name){
+	int vPos = 0;
+	QStringList li;  li << f_name << "";
+	QString fndStr;
+	for (int var = 0; var < li.count(); ++var) {
+		fndStr = li.at(var);
+		if (ui->fileName_cb->count() > 0) {
+			vPos = ui->fileName_cb->findText(fndStr);
+			while (vPos != -1) {
+				ui->fileName_cb->removeItem(vPos);
+				vPos = ui->fileName_cb->findText(fndStr);
+			}
+		}
+	}
+	ui->fileName_cb->insertItem(0,f_name);
+	ui->fileName_cb->setCurrentIndex(0);
+	//ui->fileName_le->setText(f_name);
+}
+
 void Widget::on_directoryComboBox_editTextChanged(const QString &arg1)
 {
 	updateFolderTarget();
@@ -237,7 +338,7 @@ void Widget::on_buttonBox_accepted(){
 		QMessageBox::warning(this,vTitle,QString::fromUtf8("Целевой каталог не задан!"));
 		return;
 	}
-	QString vFilePath = ui->fileName_le->text();
+	QString vFilePath = selectedFileName()/*ui->fileName_le->text()*/;
 	if (vFilePath.isEmpty()) {
 		QMessageBox::warning(this,vTitle,QString::fromUtf8("Файл не выбран!"));
 		return;
@@ -283,15 +384,12 @@ void Widget::on_buttonBox_accepted(){
 		vFolderCopy += vDelim;
 	}
 	QString vFilePath_2, vFilePath_1; // = vFolderCopy + "unpac.bat";
-//	QFile vBatFile(vFilePath_1);
-//	if (vBatFile.exists()) {
-//		vBatFile.remove();
-//	}
 
 	QDateTime vF1Lm, vF2Lm;
 	for (int cntr = 0; cntr < files.count(); ++cntr) {
 		fi = files[cntr];
 		vFilePath_1 = fi.absoluteFilePath();
+		showStatus(QString::fromUtf8("Анализ: ")+vFilePath_1);
 		vFName = fi.fileName();
 		vFilePath_2 = vFolderCopy + vFName;
 		vFi.setFile(vFilePath_2);
@@ -301,6 +399,7 @@ void Widget::on_buttonBox_accepted(){
 			vF1Lm = fi.lastModified();
 			if (vF2Lm == vF1Lm) {
 				int y = 2;
+				showStatus(QString::fromUtf8("Файл не менялся... пропускаем"));
 				continue;
 			}
 			QFile vFlObj(vFilePath_2);
@@ -311,13 +410,6 @@ void Widget::on_buttonBox_accepted(){
 
 	}
 	// надо удалить файлы: FileHeader,.data, .header если для VCS
-	/*
-	 * QProcess proc;
-	proc.setWorkingDirectory(vFolderCopy);
-
-	proc.start("unpac.bat");
-	proc.waitForFinished();
-	*/
 	if (ui->forVCS_cb->isChecked()) {
 		qDebug() << "clear...";
 		foreach (vFName, m_clearDirs) {
@@ -351,6 +443,24 @@ QString Widget::getFolderFromFile(QString &src){
 		}
 	}
 	return vFile;
+}
+
+QString Widget::getRelationFolder(QString &folder){
+	QString vVV, retVal = ui->directoryComboBox->currentText();
+	vVV = folder + "	";
+	if (m_list_dirs.count() > 0) {
+		QString val;
+		foreach (val, m_list_dirs) {
+			if (val.contains(vVV)) {
+				QStringList li = val.split("	");
+				if (li.size() == 2) {
+					retVal = li.at(1);
+				}
+				break;
+			}
+		}
+	}
+	return retVal;
 }
 QString addQts(QString src) {
 	return "\""+src+"\"";
@@ -454,7 +564,7 @@ bool Widget::unpackFile(QString &src){
 
 void Widget::on_fileName_tb_clicked()
 {
-	QFileInfo fi(ui->fileName_le->text());
+	QFileInfo fi(selectedFileName() /*ui->fileName_le->text()*/);
 	QString folderName = fi.dir().path();
 	QString vExtens = tr("1Cv8 (*.epf *.erf)");
 	if (ui->for1Cv77->isChecked()) {
@@ -463,15 +573,43 @@ void Widget::on_fileName_tb_clicked()
 	QString fileName = QFileDialog::getOpenFileName(this, tr("Open File"),	folderName,	vExtens);
 	if (!fileName.isEmpty()) {
 		fileName = fileName.replace("/","\\");
-		ui->fileName_le->setText(fileName);
+		setSelectedFileName(fileName);
+		/*ui->fileName_le->setText(fileName)*/;
 		qDebug() << fileName << folderName;
 		updateFolderCB();
 	}
 }
 
-void Widget::on_pushButton_clicked()
-{
+void Widget::on_find_v8unpack(){
+	QSettings setting( "HKEY_LOCAL_MACHINE\\SYSTEM\\CurrentControlSet\\Control\\Session Manager\\Environment", QSettings::NativeFormat );
+	QString pathVal = setting.value("Path", "no-path").toString();
+	if (!pathVal.contains(";")) {
+		return;
+	}
+	QStringList liPath = pathVal.split(";");
+	QString val, val_, dirSep, vFilePath;
+	foreach (val, liPath) {
+		if (!val.contains("%")) {
+			dirSep = getDelim(val);
+			if (val.mid(val.count()-1,1) != dirSep) {
+				val += dirSep;
+			}
+			vFilePath = val + "v8unpack.exe";
+			if (QFile::exists(vFilePath)) {
+				val_ = "v8unpack.exe - found in: "+vFilePath;
+				showStatus(val_);
+			}
 
+			vFilePath = val + "gcomp.exe";
+			if (QFile::exists(vFilePath)) {
+				val_ = "gcomp.exe - found in: "+vFilePath;
+				showStatus(val_);
+			}
+
+			//showStatus(val);
+		}
+	}
+	//qDebug() << pathVal;
 }
 
 void Widget::on_toolButton_2_clicked()
@@ -481,8 +619,66 @@ void Widget::on_toolButton_2_clicked()
 
 void Widget::on_resetSettings_tb_clicked()
 {
-	QSettings set(gMyName,gProgName);
-	set.setValue("v8UnpackQ4/total_folders",QStringList());
-	set.setValue("v8UnpackQ4/list_dirs",QStringList());
-	settingsLoad();
+	QMessageBox msgBox;
+	msgBox.setText(QString::fromUtf8("Настройки будут очищены!"));
+	msgBox.setInformativeText(QString::fromUtf8("Передумали?"));
+	msgBox.setStandardButtons(QMessageBox::Yes | QMessageBox::No);
+	msgBox.setDefaultButton(QMessageBox::Yes);
+	int ret = msgBox.exec();
+	if (ret == QMessageBox::No) {
+		QSettings set(gMyName,gProgName);
+	ui->directoryComboBox->clear();
+	ui->fileName_cb->clear();
+	set.setValue("v8UnpackQ4/folders_save",QStringList());
+		set.setValue("v8UnpackQ4/dirs_list_map",QStringList());
+	set.setValue("v8UnpackQ4/list_files",QStringList());
+		settingsLoad();
+	}
+
+}
+
+void Widget::on_fileName_cb_currentTextChanged(const QString &arg1)
+{
+	//setSelectedFileName(arg1);
+	updateFolderCB();
+
+}
+
+void Widget::on_fileName_cb_currentIndexChanged(int index)
+{
+	//setSelectedFileName(arg1);
+	updateFolderCB();
+
+}
+
+void Widget::on_kill_item_file_tb_clicked(){
+	if (ui->fileName_cb->count() == 0) {
+		return;
+	}
+	int vCurIndex = ui->fileName_cb->currentIndex();
+	if (vCurIndex != -1) {
+		ui->fileName_cb->removeItem(vCurIndex);
+	}
+}
+
+
+void Widget::on_kill_item_folder_tb_clicked(){
+	if (ui->directoryComboBox->count() == 0) {
+		return;
+	}
+	int vCurIndex = ui->directoryComboBox->currentIndex();
+	if (vCurIndex != -1) {
+		ui->directoryComboBox->removeItem(vCurIndex);
+	}
+
+
+}
+
+void Widget::on_show_path_to_me()
+{
+	QString vWhere = qApp->applicationFilePath();
+	vWhere = vWhere.replace("/","\\");
+	vWhere = QString::fromUtf8("Таков путь: ")+vWhere;
+	showStatus(vWhere);
+
 }

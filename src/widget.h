@@ -3,6 +3,8 @@
 
 #include <QWidget>
 #include <QSettings>
+#include <QMenu>
+#include <QAction>
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class Widget; }
@@ -29,18 +31,37 @@ class Widget : public QWidget
 
 		void on_fileName_tb_clicked();
 
-		void on_pushButton_clicked();
+		void on_find_v8unpack();
 
 		void on_toolButton_2_clicked();
 
 		void on_resetSettings_tb_clicked();
 
+		void on_fileName_cb_currentTextChanged(const QString &arg1);
+
+		void on_fileName_cb_currentIndexChanged(int index);
+
+		void on_kill_item_file_tb_clicked();
+
+		void on_kill_item_folder_tb_clicked();
+		void on_show_path_to_me();
+
 	private:
 		Ui::Widget *ui;
-		QStringList m_list;
-		QString m_fileNameWE; // without extens
+		QMenu *m_serviseMenu;
+		QAction *m_actFoundGU;
+		QAction *m_actKillFileItem;
+		QAction *m_actKillFolderItem;
+		QAction *m_actCliarSettings;
+		QAction *m_actWhereIAm;
+		QStringList m_listArgs;
+		QStringList m_list_dirs;
+		QString m_fileNameBaseName; // without extens
+		QString m_fileNameFolder; // without extens
+		QString m_fileNameExt; // without extens
 		QString m_folder_target;
 		QString getFolderFromFile(QString& src);
+		QString getRelationFolder(QString& folder);
 		bool unpackFile(QString& src);
 		void updateFolderCB();
 		void updateFolderTarget();
@@ -51,6 +72,10 @@ class Widget : public QWidget
 		QString getDelim(QString& src);
 		void clearFiles(QString dirertory);
 		QStringList m_clearDirs;
+
+		QString selectedFileName();
+		void setSelectedFileName(QString f_name);
+		QStringList parseFileName(QString fName);
 
 
 };

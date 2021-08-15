@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE QtCreatorProject>
-<!-- Written by QtCreator 4.11.1, 2021-08-13T13:38:09. -->
+<!-- Written by QtCreator 4.11.1, 2021-08-15T20:36:47. -->
 <qtcreator>
  <data>
   <variable>EnvironmentId</variable>
@@ -62,11 +62,11 @@
    <value type="QString" key="ProjectExplorer.ProjectConfiguration.DefaultDisplayName">Qt C:/Qt/4.8.7/mkspecs4.8.7</value>
    <value type="QString" key="ProjectExplorer.ProjectConfiguration.DisplayName">Qt C:/Qt/4.8.7/mkspecs4.8.7</value>
    <value type="QString" key="ProjectExplorer.ProjectConfiguration.Id">{327b6e3e-9f0f-4168-9ba0-2a1ccb8c965b}</value>
-   <value type="int" key="ProjectExplorer.Target.ActiveBuildConfiguration">1</value>
+   <value type="int" key="ProjectExplorer.Target.ActiveBuildConfiguration">0</value>
    <value type="int" key="ProjectExplorer.Target.ActiveDeployConfiguration">0</value>
    <value type="int" key="ProjectExplorer.Target.ActiveRunConfiguration">0</value>
    <valuemap type="QVariantMap" key="ProjectExplorer.Target.BuildConfiguration.0">
-    <value type="QString" key="ProjectExplorer.BuildConfiguration.BuildDirectory">E:/Projects/_Utils/v8UnpackQ4</value>
+    <value type="QString" key="ProjectExplorer.BuildConfiguration.BuildDirectory">E:/Projects/_Utils/v8UnpackQ4/v8UnpackQ4</value>
     <valuemap type="QVariantMap" key="ProjectExplorer.BuildConfiguration.BuildStepList.0">
      <valuemap type="QVariantMap" key="ProjectExplorer.BuildStepList.Step.0">
       <value type="bool" key="ProjectExplorer.BuildStep.Enabled">true</value>
@@ -114,7 +114,7 @@
     <value type="int" key="Qt4ProjectManager.Qt4BuildConfiguration.BuildConfiguration">2</value>
    </valuemap>
    <valuemap type="QVariantMap" key="ProjectExplorer.Target.BuildConfiguration.1">
-    <value type="QString" key="ProjectExplorer.BuildConfiguration.BuildDirectory">E:/Projects/_Utils/v8UnpackQ4</value>
+    <value type="QString" key="ProjectExplorer.BuildConfiguration.BuildDirectory">E:/Projects/_Utils/v8UnpackQ4/v8UnpackQ4</value>
     <valuemap type="QVariantMap" key="ProjectExplorer.BuildConfiguration.BuildStepList.0">
      <valuemap type="QVariantMap" key="ProjectExplorer.BuildStepList.Step.0">
       <value type="bool" key="ProjectExplorer.BuildStep.Enabled">true</value>
@@ -237,7 +237,7 @@
     <value type="QString" key="ProjectExplorer.ProjectConfiguration.DisplayName">v8UnpackQ42</value>
     <value type="QString" key="ProjectExplorer.ProjectConfiguration.Id">Qt4ProjectManager.Qt4RunConfiguration:E:/Projects/_Utils/v8UnpackQ4/v8UnpackQ4/v8UnpackQ4.pro</value>
     <value type="QString" key="ProjectExplorer.RunConfiguration.BuildKey">E:/Projects/_Utils/v8UnpackQ4/v8UnpackQ4/v8UnpackQ4.pro</value>
-    <value type="QString" key="RunConfiguration.Arguments"></value>
+    <value type="QString" key="RunConfiguration.Arguments">&quot;E:\DataBase\_victuan\_ИП Оленченко\Далион\ExtForms\ВыгрузкаВ_УСН.epf&quot;</value>
     <value type="bool" key="RunConfiguration.Arguments.multi">false</value>
     <value type="QString" key="RunConfiguration.OverrideDebuggerStartup"></value>
     <value type="bool" key="RunConfiguration.UseCppDebugger">false</value>
@@ -247,7 +247,7 @@
     <value type="bool" key="RunConfiguration.UseQmlDebugger">false</value>
     <value type="bool" key="RunConfiguration.UseQmlDebuggerAuto">true</value>
     <value type="QString" key="RunConfiguration.WorkingDirectory"></value>
-    <value type="QString" key="RunConfiguration.WorkingDirectory.default">E:/Projects/_Utils/v8UnpackQ4</value>
+    <value type="QString" key="RunConfiguration.WorkingDirectory.default">E:/Projects/_Utils/v8UnpackQ4/v8UnpackQ4</value>
    </valuemap>
    <value type="int" key="ProjectExplorer.Target.RunConfigurationCount">1</value>
   </valuemap>
